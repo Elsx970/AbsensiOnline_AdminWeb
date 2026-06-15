@@ -20,11 +20,10 @@ if (!empty($lokasi_id) && $lokasi_id != 'all') {
 
 if(isset($_GET['delete'])) {
     $del_id = intval($_GET['delete']);
-    $cek_foto = $conn->query("SELECT foto_masuk, foto_pulang FROM absensi WHERE id = $del_id");
+    $cek_foto = $conn->query("SELECT foto_masuk FROM absensi WHERE id = $del_id");
     if($cek_foto && $cek_foto->num_rows > 0) {
         $rf = $cek_foto->fetch_assoc();
         if(!empty($rf['foto_masuk']) && file_exists('../../' . $rf['foto_masuk'])) unlink('../../' . $rf['foto_masuk']);
-        if(!empty($rf['foto_pulang']) && file_exists('../../' . $rf['foto_pulang'])) unlink('../../' . $rf['foto_pulang']);
     }
     $conn->query("DELETE FROM absensi WHERE id = $del_id");
     $param_lokasi = !empty($lokasi_id) ? "lokasi_id=$lokasi_id" : "";
@@ -134,7 +133,7 @@ if(isset($_GET['delete'])) {
                             <th>Mahasiswa</th>
                             <th>Kelas / Lokasi</th>
                             <th>Jam Masuk</th>
-                            <th>Jam Pulang</th>
+                            <th>Jam Selesai</th>
                             <th>Status</th>
                             <th>Foto</th>
                             <th>Aksi</th>
@@ -150,7 +149,7 @@ if(isset($_GET['delete'])) {
                             $where .= " AND (u.nama LIKE '%$search%' OR u.email LIKE '%$search%')";
                         }
                         
-                        $sql = "SELECT a.*, u.nama, u.email as npm, l.nama_lokasi, l.pertemuan 
+                        $sql = "SELECT a.*, u.nama, u.email as npm, l.nama_lokasi, l.pertemuan, l.jam_selesai 
                                 FROM absensi a 
                                 JOIN users u ON a.user_id = u.id 
                                 LEFT JOIN lokasi l ON a.lokasi_id = l.id 
@@ -173,7 +172,7 @@ if(isset($_GET['delete'])) {
                                 <small class="text-primary">Pertemuan Ke-<?= $row['pertemuan'] ?? 1 ?></small>
                             </td>
                             <td><?= $row['jam_masuk'] ?></td>
-                            <td><?= $row['jam_pulang'] ?? '<span class="badge bg-warning">Belum Pulang</span>' ?></td>
+                            <td><?= !empty($row['jam_selesai']) ? date('H:i', strtotime($row['jam_selesai'])) . ' WIB' : '-' ?></td>
                             <td>
                                 <span class="badge bg-success"><?= $row['status'] ?></span>
                             </td>

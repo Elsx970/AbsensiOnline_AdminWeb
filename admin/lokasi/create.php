@@ -29,6 +29,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<!-- Leaflet Control Geocoder -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<!-- Flatpickr for 24h Time Picker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold">Tambah Mata Kuliah & Jadwal</h3>
     <a href="index.php" class="btn btn-outline-secondary">
@@ -55,11 +63,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row mb-3">
                         <div class="col-6">
                             <label class="form-label">Latitude</label>
-                            <input type="text" name="latitude" id="lat" class="form-control" required placeholder="-5.364446" readonly>
+                            <input type="text" name="latitude" id="lat" class="form-control" required placeholder="-5.364446">
                         </div>
                         <div class="col-6">
                             <label class="form-label">Longitude</label>
-                            <input type="text" name="longitude" id="lng" class="form-control" required placeholder="105.243501" readonly>
+                            <input type="text" name="longitude" id="lng" class="form-control" required placeholder="105.243501">
                         </div>
                     </div>
                     <div class="mb-3">
@@ -69,11 +77,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row mb-3">
                         <div class="col-6">
                             <label class="form-label">Jam Mulai</label>
-                            <input type="time" name="jam_mulai" class="form-control" required>
+                            <input type="text" name="jam_mulai" class="form-control timepicker" required placeholder="08:00">
                         </div>
                         <div class="col-6">
                             <label class="form-label">Jam Selesai</label>
-                            <input type="time" name="jam_selesai" class="form-control" required>
+                            <input type="text" name="jam_selesai" class="form-control timepicker" required placeholder="10:00">
                         </div>
                     </div>
                     <div class="mb-4">
@@ -105,12 +113,39 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 </div>
 
 <script>
-    // Titik awal peta: Universitas Lampung
     var map = L.map('map').setView([-5.364446, 105.243501], 16);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
+
+    // Add Search Control (Geocoder)
+    L.Control.geocoder({
+        defaultMarkGeocode: false,
+        placeholder: "Cari lokasi..."
+    })
+    .on('markgeocode', function(e) {
+        var bbox = e.geocode.bbox;
+        var poly = L.polygon([
+            bbox.getSouthEast(),
+            bbox.getNorthEast(),
+            bbox.getNorthWest(),
+            bbox.getSouthWest()
+        ]);
+        map.fitBounds(poly.getBounds());
+        
+        var radiusValue = parseFloat(document.getElementById('radiusInput').value) || 50;
+        setLocation(e.geocode.center.lat, e.geocode.center.lng, radiusValue);
+    })
+    .addTo(map);
+
+    // Initialize Flatpickr for 24h time format
+    flatpickr(".timepicker", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true
+    });
 
     var marker;
     var circle;
@@ -145,6 +180,28 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             var lng = parseFloat(document.getElementById('lng').value);
             var rad = parseFloat(this.value) || 50;
             setLocation(lat, lng, rad);
+        }
+    });
+
+    // Update peta jika latitude diketik manual
+    document.getElementById('lat').addEventListener('input', function() {
+        var lat = parseFloat(this.value);
+        var lng = parseFloat(document.getElementById('lng').value);
+        var rad = parseFloat(document.getElementById('radiusInput').value) || 50;
+        if (!isNaN(lat) && !isNaN(lng)) {
+            setLocation(lat, lng, rad);
+            map.setView([lat, lng], map.getZoom());
+        }
+    });
+
+    // Update peta jika longitude diketik manual
+    document.getElementById('lng').addEventListener('input', function() {
+        var lat = parseFloat(document.getElementById('lat').value);
+        var lng = parseFloat(this.value);
+        var rad = parseFloat(document.getElementById('radiusInput').value) || 50;
+        if (!isNaN(lat) && !isNaN(lng)) {
+            setLocation(lat, lng, rad);
+            map.setView([lat, lng], map.getZoom());
         }
     });
 </script>

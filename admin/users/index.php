@@ -27,8 +27,9 @@ if(isset($_GET['delete'])) {
                 <thead class="table-light">
                     <tr>
                         <th>No</th>
-                        <th>Nama Lengkap</th>
-                        <th>NPM</th>
+                        <th>Foto</th>
+                        <th>Nama & Prodi</th>
+                        <th>NPM & Kontak</th>
                         <th>Tanggal Daftar</th>
                         <th>Aksi</th>
                     </tr>
@@ -42,8 +43,23 @@ if(isset($_GET['delete'])) {
                     ?>
                     <tr>
                         <td><?= $no++ ?></td>
-                        <td class="fw-bold"><?= $row['nama'] ?></td>
-                        <td><?= $row['email'] ?></td> <!-- field email dipakai sbg NPM -->
+                        <td>
+                            <?php if(!empty($row['foto_profile'])): ?>
+                                <img src="../../uploads/profiles/<?= $row['foto_profile'] ?>" alt="Foto" width="40" height="40" class="rounded-circle object-fit-cover">
+                            <?php else: ?>
+                                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;font-size:18px;">
+                                    <?= strtoupper(substr($row['nama'], 0, 1)) ?>
+                                </div>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div class="fw-bold"><?= $row['nama'] ?></div>
+                            <small class="text-muted"><?= $row['program_studi'] ?? '-' ?></small>
+                        </td>
+                        <td>
+                            <div><?= $row['email'] ?></div> <!-- field email dipakai sbg NPM -->
+                            <small class="text-muted">Telp: <?= $row['nomor_telpon'] ?? '-' ?></small>
+                        </td>
                         <td><?= date('d M Y', strtotime($row['created_at'])) ?></td>
                         <td>
                             <a href="index.php?delete=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus?')"><i class="bi bi-trash"></i> Hapus</a>
